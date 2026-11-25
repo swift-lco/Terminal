@@ -34,8 +34,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/leviouwendijk/Difference", branch: "master"),
-        .package(url: "https://github.com/leviouwendijk/Tokens", branch: "master"),
-        .package(url: "https://github.com/leviouwendijk/DSL", branch: "master"),
+        .package(url: "https://github.com/swift-langs/Tokens", branch: "master"),
+        .package(url: "https://github.com/swift-dsl/DSL", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Primitives.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Reporting.git", branch: "master"),
         .package(url: "https://github.com/leviouwendijk/Search.git", branch: "master"),
