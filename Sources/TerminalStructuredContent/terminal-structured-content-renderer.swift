@@ -123,6 +123,66 @@ private extension TerminalStructuredContent.Renderer {
 
         case .table(let header, let rows):
             return tableRows(header: header, rows: rows, columns: columns)
+
+        case .heading(_, _, let content):
+            return inlineRows(
+                [.strong(content)],
+                columns: columns,
+                baseStyle: format.block.paragraph.style
+            )
+
+        case .image(_, let alt):
+            return inlineRows(
+                [.emphasis([.text(alt)])],
+                columns: columns,
+                baseStyle: format.block.paragraph.style
+            )
+
+        case .definitions(let definitions):
+            return joined(
+                definitions.map { definition in
+                    inlineRows(
+                        [.strong(definition.term)],
+                        columns: columns,
+                        baseStyle: format.block.paragraph.style
+                    ) + indented(
+                        renderRows(definition.description, columns: max(1, columns - 2)),
+                        by: min(2, max(0, columns - 1))
+                    )
+                },
+                spacing: format.block.collection.spacing
+            )
+
+        case .listing:
+            return []
+
+        case .native(_, _, let fallback):
+            return renderRows(fallback, columns: columns)
+        }
+    }
+
+    /// The words of a block, for content that has to sit inline (footnotes).
+    func plainText(_ content: StructuredContent) -> String {
+        switch content {
+        case .collection(let children):
+            return children.map(plainText).filter { !$0.isEmpty }.joined(separator: " ")
+        case .paragraph(let inline),
+             .heading(_, _, let inline):
+            return inline.map(\.plainText).joined()
+        case .quote(let inner),
+             .group(_, _, let inner),
+             .native(_, _, let inner):
+            return plainText(inner)
+        case .list(_, let items):
+            return items.map(plainText).joined(separator: "; ")
+        case .image(_, let alt):
+            return alt
+        case .code(_, let source):
+            return source
+        case .table,
+             .definitions,
+             .listing:
+            return ""
         }
     }
 
@@ -359,6 +419,18 @@ private extension TerminalStructuredContent.Renderer {
                 append(content, to: &source, styles: styles + [format.inline.emphasis])
             case .strong(let content):
                 append(content, to: &source, styles: styles + [format.inline.strong])
+            case .link(let target, let content):
+                append(content, to: &source, styles: styles)
+                if case .external(let url) = target {
+                    source.append(" (\(url))", styles: styles + [format.inline.text])
+                }
+            case .citation(let key, let locators):
+                source.append(
+                    StructuredContentFallback.citation(key: key, locators: locators),
+                    styles: styles + [format.inline.text]
+                )
+            case .footnote(let content):
+                source.append(" (\(plainText(content)))", styles: styles + [format.inline.text])
             }
         }
     }
