@@ -12,6 +12,10 @@ enum TerminalStructuredContentSmoke {
         case leakedRole
         case width
         case table
+        case hyperlink
+        case linkFallback
+        case readerBlocks
+        case capabilities
     }
 
     static func run() throws {
@@ -22,6 +26,9 @@ enum TerminalStructuredContentSmoke {
         try roles()
         try width()
         try table()
+        try hyperlinks()
+        try readerBlocks()
+        try capabilities()
         print(sample())
     }
 
@@ -194,6 +201,89 @@ enum TerminalStructuredContentSmoke {
               fields.first == "Tool:",
               !fields.contains(where: { $0.contains("│") }) else {
             throw Failure.table
+        }
+    }
+
+    private static func hyperlinks() throws {
+        let page = StructuredContent.PageKey(rawValue: "guide")
+        let content = StructuredContent.paragraph([
+            .text("See "),
+            .link(target: .page(page, anchor: nil), content: [.text("the guide")]),
+        ])
+        var capabilities = RenderCapabilities.terminal
+        capabilities.hyperlinks = true
+        let linked = TerminalStructuredContent.Renderer(
+            capabilities: capabilities,
+            resolver: StructuredContentURLTable(pages: [page: "https://example.com/guide"])
+        ).rows(content, columns: 40)
+
+        guard linked.count == 1,
+              linked[0].contains("\u{001B}]8;;https://example.com/guide\u{0007}"),
+              TerminalDisplay.width(of: linked[0]) == "See the guide".count
+        else {
+            throw Failure.hyperlink
+        }
+
+        let fallback = TerminalStructuredContent.Renderer().rows(
+            .paragraph([.link(target: .external("https://example.com"), content: [.text("site")])]),
+            columns: 40
+        ).map(stripANSI)
+        let unresolved = TerminalStructuredContent.Renderer().rows(content, columns: 40).map(stripANSI)
+
+        guard fallback == ["site (https://example.com)"],
+              unresolved == ["See the guide"]
+        else {
+            throw Failure.linkFallback
+        }
+    }
+
+    private static func readerBlocks() throws {
+        let rows = TerminalStructuredContent.Renderer().rows(
+            .collection([
+                .quote(.paragraph([.text("Attention is prayer.")]), attribution: [.text("Simone Weil")]),
+                .verse([[.text("first line")], [.text("    indented")]]),
+                .rule,
+                .figure(anchor: nil, content: .image(source: .asset(.init(rawValue: "x")), alt: "A dog"), caption: [.text("Fig")]),
+            ]),
+            columns: 20
+        ).map(stripANSI)
+
+        guard rows == [
+            "│ Attention is",
+            "│ prayer.",
+            "│ — Simone Weil",
+            "",
+            "first line",
+            "    indented",
+            "",
+            "       * * *",
+            "",
+            "A dog",
+            "Fig",
+        ] else {
+            print(rows)
+            throw Failure.readerBlocks
+        }
+    }
+
+    private static func capabilities() throws {
+        let piped = RenderCapabilities.terminal(environment: ["TERM_PROGRAM": "ghostty"], isTerminal: false)
+        let ghostty = RenderCapabilities.terminal(
+            environment: ["TERM_PROGRAM": "ghostty", "COLORTERM": "truecolor"],
+            isTerminal: true
+        )
+        let apple = RenderCapabilities.terminal(
+            environment: ["TERM_PROGRAM": "Apple_Terminal", "TERM": "xterm-256color", "NO_COLOR": "1"],
+            isTerminal: true
+        )
+        let forced = RenderCapabilities.terminal(environment: ["FORCE_HYPERLINK": "1"], isTerminal: true)
+
+        guard !piped.hyperlinks, piped.colorDepth == .none,
+              ghostty.hyperlinks, ghostty.colorDepth == .trueColor,
+              !apple.hyperlinks, apple.colorDepth == .none,
+              forced.hyperlinks, forced.colorDepth == .basic
+        else {
+            throw Failure.capabilities
         }
     }
 

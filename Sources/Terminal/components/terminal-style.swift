@@ -117,6 +117,10 @@ public struct TerminalStyle: Sendable, Hashable {
 
     private var components: [Component]
 
+    /// An OSC 8 hyperlink target. Terminals without OSC 8 show the text
+    /// alone, so set it only where the target supports links.
+    public var hyperlink: String?
+
     public var codes: [ANSIColor] {
         get {
             components.compactMap { component in
@@ -149,6 +153,7 @@ public struct TerminalStyle: Sendable, Hashable {
 
     public var isEmpty: Bool {
         components.isEmpty
+            && hyperlink == nil
     }
 
     public init(
@@ -207,22 +212,44 @@ public struct TerminalStyle: Sendable, Hashable {
         TerminalStyle(
             components:
                 components
-                + overlay.components
+                + overlay.components,
+            hyperlink:
+                overlay.hyperlink
+                ?? hyperlink
         )
     }
 
     public func apply(
         _ text: String
     ) -> String {
-        guard !components.isEmpty else {
-            return text
+        let styled: String
+
+        if components.isEmpty {
+            styled = text
+        } else {
+            let prefix = components
+                .map(\.ansiSequence)
+                .joined()
+
+            styled = "\(prefix)\(text)\(ANSIColor.reset.rawValue)"
         }
 
-        let prefix = components
-            .map(\.ansiSequence)
-            .joined()
+        guard let hyperlink else {
+            return styled
+        }
 
-        return "\(prefix)\(text)\(ANSIColor.reset.rawValue)"
+        return ANSILink.osc8(
+            url: hyperlink,
+            label: styled
+        )
+    }
+
+    public static func link(
+        _ url: String
+    ) -> TerminalStyle {
+        var style = TerminalStyle()
+        style.hyperlink = url
+        return style
     }
 
     public func apply(
@@ -240,8 +267,10 @@ public struct TerminalStyle: Sendable, Hashable {
 
 private extension TerminalStyle {
     private init(
-        components: [Component]
+        components: [Component],
+        hyperlink: String?
     ) {
         self.components = components
+        self.hyperlink = hyperlink
     }
 }

@@ -4,9 +4,19 @@ import Terminal
 public extension TerminalStructuredContent {
     struct Renderer: Sendable {
         public var format: Format
+        public var capabilities: RenderCapabilities
+        /// Supplies URLs for page and asset links; without one they render
+        /// as text.
+        public var resolver: any StructuredContentURLResolving
 
-        public init(format: Format = .minimal) {
+        public init(
+            format: Format = .minimal,
+            capabilities: RenderCapabilities = .terminal,
+            resolver: any StructuredContentURLResolving = StructuredContentURLTable()
+        ) {
             self.format = format
+            self.capabilities = capabilities
+            self.resolver = resolver
         }
 
         public func rows(
@@ -107,8 +117,8 @@ private extension TerminalStructuredContent.Renderer {
         case .code(let language, let source):
             return codeRows(language: language, source: source, columns: columns)
 
-        case .quote(let content):
-            return quoteRows(content, columns: columns)
+        case .quote(let content, let attribution):
+            return quoteRows(content, attribution: attribution, columns: columns)
 
         case .list(let style, let items):
             return listRows(style: style, items: items, columns: columns)
@@ -122,6 +132,14 @@ private extension TerminalStructuredContent.Renderer {
             )
 
         case .table(let header, let rows):
+            guard capabilities.tables else {
+                return fieldRows(
+                    header: header.map(strong),
+                    rows: rows,
+                    count: ([header] + rows).map(\.count).max() ?? 0,
+                    columns: columns
+                )
+            }
             return tableRows(header: header, rows: rows, columns: columns)
 
         case .heading(_, _, let content):
@@ -131,12 +149,30 @@ private extension TerminalStructuredContent.Renderer {
                 baseStyle: format.block.paragraph.style
             )
 
-        case .image(_, let alt):
-            return inlineRows(
-                [.emphasis([.text(alt)])],
-                columns: columns,
-                baseStyle: format.block.paragraph.style
+        case .image(let source, let alt):
+            return imageRows(source: source, alt: alt, columns: columns)
+
+        case .figure(_, let content, let caption):
+            let captionRows = caption.map {
+                inlineRows(
+                    [.emphasis($0)],
+                    columns: columns,
+                    baseStyle: format.block.figure.captionStyle
+                )
+            } ?? []
+            return joined(
+                [renderRows(content, columns: columns), captionRows],
+                spacing: format.block.figure.spacing
             )
+
+        case .verse(let lines):
+            return lines.flatMap { verseRows($0, columns: columns) }
+
+        case .rule:
+            let rule = format.block.rule
+            let text = TerminalDisplay.clipped(rule.text, columns: columns)
+            let margin = max(0, (columns - TerminalDisplay.width(of: text)) / 2)
+            return [String(repeating: " ", count: margin) + rule.style.apply(text)]
 
         case .definitions(let definitions):
             return joined(
@@ -161,29 +197,46 @@ private extension TerminalStructuredContent.Renderer {
         }
     }
 
-    /// The words of a block, for content that has to sit inline (footnotes).
-    func plainText(_ content: StructuredContent) -> String {
-        switch content {
-        case .collection(let children):
-            return children.map(plainText).filter { !$0.isEmpty }.joined(separator: " ")
-        case .paragraph(let inline),
-             .heading(_, _, let inline):
-            return inline.map(\.plainText).joined()
-        case .quote(let inner),
-             .group(_, _, let inner),
-             .native(_, _, let inner):
-            return plainText(inner)
-        case .list(_, let items):
-            return items.map(plainText).joined(separator: "; ")
-        case .image(_, let alt):
-            return alt
-        case .code(_, let source):
-            return source
-        case .table,
-             .definitions,
-             .listing:
-            return ""
+    func imageRows(
+        source: StructuredContent.ImageSource,
+        alt: String,
+        columns: Int
+    ) -> [String] {
+        let styles: [TerminalStyle]
+        switch capabilities.image(source, resolver: resolver) {
+        case .image(let url),
+             .link(let url):
+            styles = capabilities.hyperlinks ? [.link(url)] : []
+        case .alt:
+            styles = []
         }
+
+        var text = StyledSource()
+        text.append(alt, styles: styles + [format.inline.emphasis])
+        return styledWordRows(text, columns: max(1, columns), baseStyle: format.block.paragraph.style)
+    }
+
+    /// A verse line keeps its leading spaces as indentation; a wrapped line
+    /// continues under its own start.
+    func verseRows(
+        _ line: [StructuredContent.Inline],
+        columns: Int
+    ) -> [String] {
+        var line = line
+        var lead = 0
+
+        if case .text(let text) = line.first {
+            lead = text.prefix { $0 == " " }.count
+            line[0] = .text(String(text.dropFirst(lead)))
+        }
+
+        let indent = min(lead, max(0, columns - 1))
+        let rows = inlineRows(
+            line,
+            columns: max(1, columns - indent),
+            baseStyle: format.block.paragraph.style
+        )
+        return rows.isEmpty ? [""] : indented(rows, by: indent)
     }
 
     /// Aligned columns when they fit; wide columns wrap down to
@@ -307,14 +360,29 @@ private extension TerminalStructuredContent.Renderer {
         return rows
     }
 
-    func quoteRows(_ content: StructuredContent, columns: Int) -> [String] {
+    func quoteRows(
+        _ content: StructuredContent,
+        attribution: [StructuredContent.Inline]?,
+        columns: Int
+    ) -> [String] {
         let gutter = format.block.quote.gutter
         let gutterWidth = min(
             TerminalDisplay.width(of: gutter.text),
             max(0, columns - 1)
         )
         let gutterText = TerminalDisplay.clipped(gutter.text, columns: gutterWidth)
-        let rows = renderRows(content, columns: max(1, columns - gutterWidth))
+        let inner = max(1, columns - gutterWidth)
+        let source = attribution.map {
+            inlineRows(
+                [.text("— ")] + $0,
+                columns: inner,
+                baseStyle: format.block.quote.attributionStyle
+            )
+        } ?? []
+        let rows = joined(
+            [renderRows(content, columns: inner), source],
+            spacing: 0
+        )
 
         guard !rows.isEmpty else { return [] }
         return rows.map { gutter.style.apply(gutterText) + $0 }
@@ -420,9 +488,14 @@ private extension TerminalStructuredContent.Renderer {
             case .strong(let content):
                 append(content, to: &source, styles: styles + [format.inline.strong])
             case .link(let target, let content):
-                append(content, to: &source, styles: styles)
-                if case .external(let url) = target {
+                switch capabilities.link(target, content: content, resolver: resolver) {
+                case .hyperlink(let url):
+                    append(content, to: &source, styles: styles + [.link(url), format.inline.link])
+                case .textWithURL(let url):
+                    append(content, to: &source, styles: styles)
                     source.append(" (\(url))", styles: styles + [format.inline.text])
+                case .text:
+                    append(content, to: &source, styles: styles)
                 }
             case .citation(let key, let locators):
                 source.append(
@@ -430,7 +503,7 @@ private extension TerminalStructuredContent.Renderer {
                     styles: styles + [format.inline.text]
                 )
             case .footnote(let content):
-                source.append(" (\(plainText(content)))", styles: styles + [format.inline.text])
+                source.append(" (\(content.plainText))", styles: styles + [format.inline.text])
             }
         }
     }

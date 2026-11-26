@@ -26,17 +26,21 @@ public extension TerminalStructuredContent.Format {
         public var code: TerminalStyle
         public var emphasis: TerminalStyle
         public var strong: TerminalStyle
+        /// Text that carries an OSC 8 link.
+        public var link: TerminalStyle
 
         public init(
             text: TerminalStyle = .none,
             code: TerminalStyle = .dim,
             emphasis: TerminalStyle = .init(.italic),
-            strong: TerminalStyle = .bold
+            strong: TerminalStyle = .bold,
+            link: TerminalStyle = .init(.underline)
         ) {
             self.text = text
             self.code = code
             self.emphasis = emphasis
             self.strong = strong
+            self.link = link
         }
     }
 
@@ -48,6 +52,8 @@ public extension TerminalStructuredContent.Format {
         public var list: List
         public var group: Group
         public var table: Table
+        public var figure: Figure
+        public var rule: Rule
 
         public init(
             collection: Collection = .init(),
@@ -56,8 +62,12 @@ public extension TerminalStructuredContent.Format {
             quote: Quote = .init(),
             list: List = .init(),
             group: Group = .init(),
-            table: Table = .init()
+            table: Table = .init(),
+            figure: Figure = .init(),
+            rule: Rule = .init()
         ) {
+            self.figure = figure
+            self.rule = rule
             self.collection = collection
             self.paragraph = paragraph
             self.code = code
@@ -148,7 +158,43 @@ public extension TerminalStructuredContent.Format.Block {
         }
 
         public var gutter: Gutter
-        public init(gutter: Gutter = .init()) { self.gutter = gutter }
+        public var attributionStyle: TerminalStyle
+
+        public init(
+            gutter: Gutter = .init(),
+            attributionStyle: TerminalStyle = .dim
+        ) {
+            self.gutter = gutter
+            self.attributionStyle = attributionStyle
+        }
+    }
+
+    struct Figure: Sendable, Hashable {
+        public var captionStyle: TerminalStyle
+        /// Blank rows between the content and its caption.
+        public var spacing: Int
+
+        public init(
+            captionStyle: TerminalStyle = .dim,
+            spacing: Int = 0
+        ) {
+            self.captionStyle = captionStyle
+            self.spacing = max(0, spacing)
+        }
+    }
+
+    /// A section break, centred.
+    struct Rule: Sendable, Hashable {
+        public var text: String
+        public var style: TerminalStyle
+
+        public init(
+            text: String = "* * *",
+            style: TerminalStyle = .dim
+        ) {
+            self.text = text
+            self.style = style
+        }
     }
 
     struct List: Sendable, Hashable {
