@@ -19,6 +19,7 @@ enum TerminalStructuredContentSmoke {
         case themeParity
         case themeColors
         case themeRoles
+        case notes
     }
 
     static func run() throws {
@@ -33,6 +34,7 @@ enum TerminalStructuredContentSmoke {
         try readerBlocks()
         try capabilities()
         try theme()
+        try notes()
         print(sample())
     }
 
@@ -299,6 +301,27 @@ enum TerminalStructuredContentSmoke {
 
         guard rows.allSatisfy({ TerminalDisplay.width(of: $0) <= 32 }) else {
             throw Failure.width
+        }
+    }
+
+    private static func notes() throws {
+        let resolved = StructuredContentEnumerations.resolve(
+            .collection([
+                .prose("Claim \(cite: .init(rawValue: "ader2019"), at: .init(.page, "12")).\(note: "A note.")"),
+            ])
+        )
+        let rows = TerminalStructuredContent.Renderer().rows(resolved.content, columns: 30).map(stripANSI)
+
+        guard rows == [
+            "Claim [1].[2]",
+            "",
+            "[2] A note.",
+            "",
+            "[1] ader2019",
+            "    p. 12 [1]",
+        ] else {
+            print(rows)
+            throw Failure.notes
         }
     }
 

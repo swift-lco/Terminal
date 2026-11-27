@@ -192,6 +192,9 @@ private extension TerminalStructuredContent.Renderer {
         case .listing:
             return []
 
+        case .notes(let notes):
+            return notesRows(notes, columns: columns)
+
         case .native(_, _, let fallback):
             return renderRows(fallback, columns: columns)
         }
@@ -388,6 +391,37 @@ private extension TerminalStructuredContent.Renderer {
         return rows.map { gutter.style.apply(gutterText) + $0 }
     }
 
+    /// Each note as its label, then its content under a hanging indent,
+    /// then its locator uses.
+    func notesRows(
+        _ notes: [StructuredContent.Note],
+        columns: Int
+    ) -> [String] {
+        joined(
+            notes.map { note in
+                let marker = note.label + " "
+                let markerWidth = min(TerminalDisplay.width(of: marker), max(0, columns - 1))
+                let styledMarker = format.block.list.markerStyle.apply(
+                    TerminalDisplay.clipped(marker, columns: markerWidth)
+                )
+                var rows = renderRows(note.content, columns: max(1, columns - markerWidth))
+
+                if !note.uses.isEmpty {
+                    rows += inlineRows(
+                        [.text(note.uses.map(\.rendered).joined(separator: "; "))],
+                        columns: max(1, columns - markerWidth),
+                        baseStyle: format.inline.noteReference
+                    )
+                }
+
+                guard let first = rows.first else { return [styledMarker] }
+                let continuation = String(repeating: " ", count: markerWidth)
+                return [styledMarker + first] + rows.dropFirst().map { continuation + $0 }
+            },
+            spacing: 0
+        )
+    }
+
     func listRows(
         style: StructuredContent.ListStyle,
         items: [StructuredContent],
@@ -502,6 +536,8 @@ private extension TerminalStructuredContent.Renderer {
                     StructuredContentFallback.citation(key: key, locators: locators),
                     styles: styles + [format.inline.text]
                 )
+            case .noteReference(let number, _):
+                source.append("[\(number)]", styles: styles + [format.inline.noteReference])
             case .footnote(let content):
                 source.append(" (\(content.plainText))", styles: styles + [format.inline.text])
             }

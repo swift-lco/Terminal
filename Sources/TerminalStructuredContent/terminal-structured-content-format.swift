@@ -28,14 +28,18 @@ public extension TerminalStructuredContent.Format {
         public var strong: TerminalStyle
         /// Text that carries an OSC 8 link.
         public var link: TerminalStyle
+        /// A numbered mark pointing at a note.
+        public var noteReference: TerminalStyle
 
         public init(
             text: TerminalStyle = .none,
             code: TerminalStyle = .dim,
             emphasis: TerminalStyle = .init(.italic),
             strong: TerminalStyle = .bold,
-            link: TerminalStyle = .init(.underline)
+            link: TerminalStyle = .init(.underline),
+            noteReference: TerminalStyle = .dim
         ) {
+            self.noteReference = noteReference
             self.text = text
             self.code = code
             self.emphasis = emphasis

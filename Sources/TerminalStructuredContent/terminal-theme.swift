@@ -90,7 +90,8 @@ public extension TerminalStructuredContent.Format {
             code: style(.code),
             emphasis: style(.emphasis),
             strong: style(.strong),
-            link: style(.link)
+            link: style(.link),
+            noteReference: style(.muted)
         )
         format.block.paragraph.style = style(.body)
         format.block.heading.style = style(.heading)

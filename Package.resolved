@@ -52,7 +52,7 @@
       "location" : "https://github.com/swift-dsl/DSL",
       "state" : {
         "branch" : "master",
-        "revision" : "1fcf1866db115952433319e75f1fb505fcf31886"
+        "revision" : "c6827fa7b79f9a6aa7a8313abeed5c31bcb35923"
       }
     },
     {
@@ -160,7 +160,7 @@
       "location" : "https://github.com/swift-lco/Reporting.git",
       "state" : {
         "branch" : "master",
-        "revision" : "e7d0de6d5a3daff2a9003033a634119b1fe6d45e"
+        "revision" : "073ae9021b5e606684bf35e1bfa1dd2ee393106c"
       }
     },
     {
