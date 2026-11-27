@@ -1,3 +1,5 @@
+import Surface
+
 public enum TerminalActionControlEvent:
     Sendable,
     Hashable
@@ -27,7 +29,7 @@ public struct TerminalActionControl:
     }
 
     public func handle(
-        _ key: TerminalKey
+        _ key: SurfaceInput.Key
     ) -> TerminalActionControlEvent? {
         guard isEnabled else {
             return nil

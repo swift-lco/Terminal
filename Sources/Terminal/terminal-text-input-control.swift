@@ -1,16 +1,17 @@
 import Foundation
+import Surface
 
 public struct TerminalTextInputControl:
     Sendable,
     Hashable
 {
-    public private(set) var input: TerminalTextInput
+    public private(set) var input: SurfaceTextInput.State
     public var prompt: String
     public var placeholder: String
     public var placeholderStyle: TerminalStyle
 
     public init(
-        input: TerminalTextInput = TerminalTextInput(),
+        input: SurfaceTextInput.State = SurfaceTextInput.State(),
         prompt: String = "> ",
         placeholder: String = "",
         placeholderStyle: TerminalStyle = .dim
@@ -22,18 +23,18 @@ public struct TerminalTextInputControl:
     }
 
     public mutating func handle(
-        _ key: TerminalKey
-    ) -> TerminalTextInputEvent? {
+        _ key: SurfaceInput.Key
+    ) -> SurfaceTextInput.Event? {
         input.handle(
             key
         )
     }
 
     public mutating func handle(
-        _ event: TerminalInputEvent
-    ) -> TerminalTextInputEvent? {
+        _ event: SurfaceInput
+    ) -> SurfaceTextInput.Event? {
         switch event {
-        case .mouse:
+        case .pointer:
             return nil
 
         case .key(let key):
@@ -41,9 +42,9 @@ public struct TerminalTextInputControl:
                 key
             )
 
-        case .keyStroke(let keyStroke):
+        case .stroke(let stroke):
             return handle(
-                keyStroke.key
+                stroke.key
             )
 
         case .paste(let text):
@@ -62,7 +63,7 @@ public struct TerminalTextInputControl:
     @discardableResult
     public mutating func insert(
         _ text: String
-    ) -> TerminalTextInputEvent? {
+    ) -> SurfaceTextInput.Event? {
         input.insert(
             text
         )

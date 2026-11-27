@@ -1,3 +1,5 @@
+import Surface
+
 #if canImport(Darwin)
 import Darwin
 #endif
@@ -5,7 +7,7 @@ import Darwin
 public extension TerminalKeyReader {
     func readEvent(
         timeoutMilliseconds: Int32
-    ) -> TerminalInputEvent? {
+    ) -> SurfaceInput? {
         #if canImport(Darwin)
         var descriptor = pollfd(
             fd: fileDescriptor,
@@ -41,7 +43,7 @@ public extension TerminalKeyReader {
     func readEvents(
         timeoutMilliseconds: Int32,
         maximumCount: Int = 64
-    ) -> [TerminalInputEvent] {
+    ) -> [SurfaceInput] {
         let maximumCount = max(
             0,
             maximumCount
@@ -72,7 +74,7 @@ public extension TerminalKeyReader {
 
     func readKey(
         timeoutMilliseconds: Int32
-    ) -> TerminalKey? {
+    ) -> SurfaceInput.Key? {
         #if canImport(Darwin)
         var descriptor = pollfd(
             fd: fileDescriptor,

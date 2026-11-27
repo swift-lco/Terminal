@@ -41,6 +41,7 @@ let package = Package(
         .package(url: "https://github.com/swift-lco/Search.git", branch: "master"),
         .package(url: "https://github.com/swift-lco/Math.git", branch: "master"),
         .package(url: "https://github.com/swift-tooling/Testing.git", branch: "master"),
+        .package(url: "https://github.com/swift-lco/Surface.git", branch: "master"),
         .package(path: ".."),
     ],
     targets: [
@@ -82,6 +83,7 @@ let package = Package(
             name: "TerminalTestFlows",
             dependencies: [
                 .product(name: "Terminal", package: "Terminal"),
+                .product(name: "Surface", package: "Surface"),
                 .product(name: "TerminalStructuredContent", package: "Terminal"),
                 .product(
                     name: "DSL",

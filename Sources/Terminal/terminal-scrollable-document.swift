@@ -1,3 +1,5 @@
+import Surface
+
 public enum TerminalDocumentWrapping:
     Sendable,
     Hashable
@@ -11,7 +13,7 @@ public struct TerminalScrollableDocument:
     Hashable
 {
     public private(set) var lines: [String]
-    public private(set) var viewport: TerminalViewport
+    public private(set) var viewport: SurfaceViewport
     public private(set) var isFollowingEnd: Bool
     public private(set) var selection: TerminalTextSelection?
 
@@ -25,7 +27,7 @@ public struct TerminalScrollableDocument:
         followEnd: Bool = false
     ) {
         self.lines = lines
-        self.viewport = TerminalViewport(
+        self.viewport = SurfaceViewport(
             contentRows: lines.count,
             visibleRows: visibleRows
         )
@@ -326,7 +328,7 @@ extension TerminalScrollableDocument {
     /// Handles wheel and primary-button selection within the last rendered region.
     /// A drag past the top or bottom scrolls one row and extends the selection.
     @discardableResult
-    public mutating func handle(_ mouse: TerminalMouseEvent) -> Bool {
+    public mutating func handle(_ mouse: SurfaceInput.Pointer) -> Bool {
         guard let region = presentationState?.region, !region.isEmpty else { return false }
         let inside = (region.top..<region.bottom).contains(mouse.position.row)
             && (region.leading..<region.trailing).contains(mouse.position.column)
@@ -370,7 +372,7 @@ extension TerminalScrollableDocument {
     }
 
     private func documentPosition(
-        _ position: TerminalTextPosition, in region: TerminalRegion
+        _ position: SurfaceInput.Pointer.Position, in region: TerminalRegion
     ) -> TerminalTextPosition {
         let row = min(max(0, lines.count - 1), viewport.offset
             + min(region.rows - 1, max(0, position.row - region.top)))

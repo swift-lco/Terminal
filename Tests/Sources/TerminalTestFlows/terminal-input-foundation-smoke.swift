@@ -1,4 +1,5 @@
 import Foundation
+import Surface
 import Terminal
 
 #if canImport(Darwin)
@@ -117,14 +118,14 @@ enum TerminalInputFoundationSmoke {
                 encoded.utf8
             )
         ) { reader in
-            guard reader.readEvent() == .keyStroke(
-                TerminalKeyStroke(
+            guard reader.readEvent() == .stroke(
+                SurfaceInput.Stroke(
                     key: .enter,
                     modifiers: .control
                 )
             ),
-            reader.readEvent() == .keyStroke(
-                TerminalKeyStroke(
+            reader.readEvent() == .stroke(
+                SurfaceInput.Stroke(
                     key: .char("a")
                 )
             ) else {
@@ -133,17 +134,17 @@ enum TerminalInputFoundationSmoke {
 
             let modifierEvent = reader.readEvent()
 
-            guard case .keyStroke(let modifierStroke) = modifierEvent,
+            guard case .stroke(let modifierStroke) = modifierEvent,
                   case .unknown = modifierStroke.key,
                   modifierStroke.modifiers == .control,
-                  reader.readEvent() == .keyStroke(
-                    TerminalKeyStroke(
+                  reader.readEvent() == .stroke(
+                    SurfaceInput.Stroke(
                         key: .control("C"),
                         modifiers: .control
                     )
                   ),
-                  reader.readEvent() == .keyStroke(
-                    TerminalKeyStroke(
+                  reader.readEvent() == .stroke(
+                    SurfaceInput.Stroke(
                         key: .char("V"),
                         modifiers: .shift
                     )
@@ -158,16 +159,16 @@ enum TerminalInputFoundationSmoke {
             + "\u{001B}[<0;4;2M\u{001B}[<32;8;3M\u{001B}[<0;8;3m"
             + "\u{001B}[<20;4;2M\u{001B}[<64;0;7Mx"
         try withReader(bytes: Array(encoded.utf8)) { reader in
-            let expected: [TerminalInputEvent] = [
-                .mouse(.init(kind: .scrollUp, row: 6, column: 11)),
-                .mouse(.init(kind: .scrollDown, row: 6, column: 11, button: 1)),
-                .mouse(.init(kind: .press, row: 1, column: 3)),
-                .mouse(.init(kind: .drag, row: 2, column: 7)),
-                .mouse(.init(kind: .release, row: 2, column: 7)),
-                .mouse(.init(kind: .press, row: 1, column: 3, modifiers: [.shift, .control])),
+            let expected: [SurfaceInput] = [
+                .pointer(.init(kind: .scrollUp, row: 6, column: 11)),
+                .pointer(.init(kind: .scrollDown, row: 6, column: 11, button: 1)),
+                .pointer(.init(kind: .press, row: 1, column: 3)),
+                .pointer(.init(kind: .drag, row: 2, column: 7)),
+                .pointer(.init(kind: .release, row: 2, column: 7)),
+                .pointer(.init(kind: .press, row: 1, column: 3, modifiers: [.shift, .control])),
             ]
             for event in expected {
-                guard reader.readEvent() == event, event.keyStroke == nil,
+                guard reader.readEvent() == event, event.stroke == nil,
                       event.legacyKey == .unknown([]) else { throw Failure.unexpectedMouse }
             }
             guard case .key(.unknown) = reader.readEvent(),

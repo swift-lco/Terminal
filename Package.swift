@@ -49,6 +49,7 @@ let package = Package(
         .package(url: "https://github.com/swift-lco/Search.git", branch: "master"),
         .package(url: "https://github.com/swift-lco/Math.git", branch: "master"),
         .package(url: "https://github.com/swift-lco/Clipboard", branch: "master"),
+        .package(url: "https://github.com/swift-lco/Surface.git", branch: "master"),
     ],
     targets: [
         .binaryTarget(
@@ -69,6 +70,7 @@ let package = Package(
                 .product(name: "Primitives", package: "Primitives"),
                 .product(name: "Strings", package: "Strings"),
                 .product(name: "Clipboard", package: "Clipboard"),
+                .product(name: "Surface", package: "Surface"),
             ],
         ),
         .target(

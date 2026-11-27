@@ -1,4 +1,5 @@
 import Primitives
+import Surface
 
 /// One entry of a `TerminalTreeList`; a branch when its node has children.
 public struct TerminalTreeListItem<ID: Hashable & Sendable>: Sendable, Hashable {
@@ -146,7 +147,7 @@ public struct TerminalTreeList<ID: Hashable & Sendable>: Sendable {
     }
 
     public mutating func handle(
-        _ key: TerminalKey
+        _ key: SurfaceInput.Key
     ) -> Event? {
         if isEditingQuery {
             switch key {
@@ -393,7 +394,7 @@ extension TerminalTreeList {
     /// collapse/parent and expand/child moves until nothing changes.
     @discardableResult
     public mutating func apply(
-        _ command: TerminalNavigationCommand
+        _ command: SurfaceIntent.Navigation
     ) -> Event? {
         apply(
             command,
@@ -403,7 +404,7 @@ extension TerminalTreeList {
 
     @discardableResult
     public mutating func apply(
-        _ command: TerminalNavigationCommand,
+        _ command: SurfaceIntent.Navigation,
         pageRows: Int
     ) -> Event? {
         guard !isEditingQuery,
@@ -426,10 +427,10 @@ extension TerminalTreeList {
             ].item.id
 
         case .horizontal(let steps):
-            let key: TerminalKey = steps < 0 ? .left : .right
+            let key: SurfaceInput.Key = steps < 0 ? .left : .right
             var event: Event?
             for _ in 0..<abs(
-                TerminalNavigationCommand.bounded(
+                SurfaceIntent.Navigation.bounded(
                     steps,
                     to: rows.count
                 )
@@ -451,7 +452,7 @@ extension TerminalTreeList {
                 return nil
             }
 
-            let bounded = TerminalNavigationCommand.bounded(
+            let bounded = SurfaceIntent.Navigation.bounded(
                 steps,
                 to: rows.count
             )

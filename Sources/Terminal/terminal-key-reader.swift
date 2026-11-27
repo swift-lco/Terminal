@@ -1,4 +1,5 @@
 import Foundation
+import Surface
 
 #if canImport(Darwin)
 import Darwin
@@ -23,11 +24,11 @@ public struct TerminalKeyReader: Sendable {
     }
     #endif
 
-    public func readKey() -> TerminalKey {
+    public func readKey() -> SurfaceInput.Key {
         readEvent().legacyKey
     }
 
-    public func readEvent() -> TerminalInputEvent {
+    public func readEvent() -> SurfaceInput {
         #if canImport(Darwin)
         guard let firstByte = readByteBlocking() else {
             return .key(
@@ -48,7 +49,7 @@ public struct TerminalKeyReader: Sendable {
     #if canImport(Darwin)
     private func decodeEvent(
         firstByte: UInt8
-    ) -> TerminalInputEvent {
+    ) -> SurfaceInput {
         if firstByte == 0x1B {
             return readEscapeEvent()
         }
@@ -68,7 +69,7 @@ public struct TerminalKeyReader: Sendable {
         )
     }
 
-    private func readEscapeEvent() -> TerminalInputEvent {
+    private func readEscapeEvent() -> SurfaceInput {
         guard let secondByte = readByteWithRawTimeout() else {
             return .key(
                 .escape
@@ -96,7 +97,7 @@ public struct TerminalKeyReader: Sendable {
         }
     }
 
-    private func readCSIEvent() -> TerminalInputEvent {
+    private func readCSIEvent() -> SurfaceInput {
         guard let sequence = readCSIBytes() else {
             return .key(
                 .unknown(
@@ -116,14 +117,14 @@ public struct TerminalKeyReader: Sendable {
             )
         }
 
-        if let mouse = TerminalMouseEvent.decode(sequence) {
-            return .mouse(mouse)
+        if let pointer = SurfaceInput.Pointer.decodeSGR(sequence) {
+            return .pointer(pointer)
         }
 
         if let keyStroke = decodeCSIUKeyStroke(
             sequence
         ) {
-            return .keyStroke(
+            return .stroke(
                 keyStroke
             )
         }
@@ -158,7 +159,7 @@ public struct TerminalKeyReader: Sendable {
 
     private func decodeCSIUKeyStroke(
         _ bytes: [UInt8]
-    ) -> TerminalKeyStroke? {
+    ) -> SurfaceInput.Stroke? {
         guard bytes.last == 0x75 else {
             return nil
         }
@@ -202,7 +203,7 @@ public struct TerminalKeyReader: Sendable {
             0,
             encodedModifiers - 1
         )
-        let modifiers = TerminalKeyModifiers(
+        let modifiers = SurfaceInput.Modifiers(
             rawValue: UInt16(
                 min(
                     modifierBits,
@@ -222,7 +223,7 @@ public struct TerminalKeyReader: Sendable {
             rawBytes: bytes
         )
 
-        return TerminalKeyStroke(
+        return SurfaceInput.Stroke(
             key: key,
             modifiers: modifiers
         )
@@ -262,10 +263,10 @@ public struct TerminalKeyReader: Sendable {
 
     private func decodeCSIUKey(
         _ keyCode: Int,
-        modifiers: TerminalKeyModifiers,
+        modifiers: SurfaceInput.Modifiers,
         associatedText: String?,
         rawBytes: [UInt8]
-    ) -> TerminalKey {
+    ) -> SurfaceInput.Key {
         switch keyCode {
         case 9:
             return .tab
@@ -369,7 +370,7 @@ public struct TerminalKeyReader: Sendable {
 
     private func decodeCSIBytes(
         _ bytes: [UInt8]
-    ) -> TerminalKey {
+    ) -> SurfaceInput.Key {
         switch String(
             decoding: bytes,
             as: UTF8.self
@@ -420,7 +421,7 @@ public struct TerminalKeyReader: Sendable {
 
     private func readUTF8Character(
         firstByte: UInt8
-    ) -> TerminalKey {
+    ) -> SurfaceInput.Key {
         let byteCount: Int
 
         switch firstByte {
@@ -515,7 +516,7 @@ public struct TerminalKeyReader: Sendable {
 
     private func decode(
         firstByte: UInt8
-    ) -> TerminalKey {
+    ) -> SurfaceInput.Key {
         switch firstByte {
         case 0x00:
             return .controlSpace
@@ -578,7 +579,7 @@ public struct TerminalKeyReader: Sendable {
         }
     }
 
-    private func readEscapeSequence() -> TerminalKey {
+    private func readEscapeSequence() -> SurfaceInput.Key {
         guard let secondByte = readByteWithRawTimeout() else {
             return .escape
         }
@@ -600,7 +601,7 @@ public struct TerminalKeyReader: Sendable {
         }
     }
 
-    private func readCSISequence() -> TerminalKey {
+    private func readCSISequence() -> SurfaceInput.Key {
         guard let thirdByte = readByteWithRawTimeout() else {
             return .unknown(
                 [
@@ -692,7 +693,7 @@ public struct TerminalKeyReader: Sendable {
         }
     }
 
-    private func readSS3Sequence() -> TerminalKey {
+    private func readSS3Sequence() -> SurfaceInput.Key {
         guard let thirdByte = readByteWithRawTimeout() else {
             return .unknown(
                 [

@@ -1,4 +1,5 @@
 import Difference
+import Surface
 import Terminal
 
 enum TerminalTUIFoundationSmoke {
@@ -46,7 +47,7 @@ enum TerminalTUIFoundationSmoke {
     }
 
     private static func runViewportProbe() throws {
-        var viewport = TerminalViewport(
+        var viewport = SurfaceViewport(
             contentRows: 100,
             visibleRows: 10
         )
@@ -106,7 +107,7 @@ enum TerminalTUIFoundationSmoke {
     }
 
     private static func runTextInputProbe() throws {
-        var input = TerminalTextInput(
+        var input = SurfaceTextInput.State(
             text: "ac",
             cursorOffset: 1
         )

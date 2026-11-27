@@ -1,3 +1,4 @@
+import Surface
 import Terminal
 
 enum TerminalOverlayFoundationSmoke {
@@ -27,7 +28,7 @@ enum TerminalOverlayFoundationSmoke {
     }
 
     private static func runFocusProbe() throws {
-        var focus = TerminalFocusStack(
+        var focus = SurfaceFocus.Stack(
             Focus.base
         )
 

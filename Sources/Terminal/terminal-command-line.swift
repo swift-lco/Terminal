@@ -1,3 +1,5 @@
+import Surface
+
 public enum TerminalCommandLineEvent:
     Sendable,
     Codable,
@@ -12,13 +14,13 @@ public struct TerminalCommandLine:
     Sendable,
     Hashable
 {
-    public private(set) var input: TerminalTextInput
+    public private(set) var input: SurfaceTextInput.State
     public private(set) var isActive: Bool
     public var prompt: String
     public private(set) var status: String?
 
     public init(
-        input: TerminalTextInput = .init(),
+        input: SurfaceTextInput.State = .init(),
         isActive: Bool = false,
         prompt: String = ":",
         status: String? = nil
@@ -49,7 +51,7 @@ public struct TerminalCommandLine:
 
     @discardableResult
     public mutating func handle(
-        _ key: TerminalKey
+        _ key: SurfaceInput.Key
     ) -> TerminalCommandLineEvent? {
         guard isActive else {
             return nil

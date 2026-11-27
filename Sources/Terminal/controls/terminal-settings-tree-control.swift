@@ -1,4 +1,5 @@
 import Primitives
+import Surface
 
 /// One setting in a `TerminalSettingsTreeControl`: a section when its node
 /// has children, else a choice, switch or read-only value.
@@ -114,7 +115,7 @@ public struct TerminalSettingsTreeControl<ID: Hashable & Sendable>: Sendable {
     }
 
     public mutating func handle(
-        _ key: TerminalKey
+        _ key: SurfaceInput.Key
     ) -> TerminalSettingsTreeEvent<ID>? {
         if !list.capturesInput {
             switch key {
@@ -147,7 +148,7 @@ public struct TerminalSettingsTreeControl<ID: Hashable & Sendable>: Sendable {
 
     /// Counted or absolute movement over the rows; horizontal steps fold.
     public mutating func apply(
-        _ command: TerminalNavigationCommand
+        _ command: SurfaceIntent.Navigation
     ) {
         let before = list.cursor
         list.apply(command)

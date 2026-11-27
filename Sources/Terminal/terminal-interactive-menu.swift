@@ -1,10 +1,12 @@
+import Surface
+
 public struct TerminalInteractiveMenuConfiguration: Sendable, Codable, Hashable {
     public var listConfiguration: TerminalInteractiveListConfiguration
 
     public init(
         title: String,
         instructions: String = "",
-        wrapMode: TerminalListNavigator.WrapMode = .wrap,
+        wrapMode: SurfaceList.Navigator.WrapMode = .wrap,
         useAlternateScreen: Bool = true,
         hideCursor: Bool = true,
         outputStream: TerminalStream = .standardError,
@@ -46,7 +48,7 @@ public struct TerminalInteractiveMenuConfiguration: Sendable, Codable, Hashable 
     public static func inline(
         title: String,
         instructions: String = "",
-        wrapMode: TerminalListNavigator.WrapMode = .wrap,
+        wrapMode: SurfaceList.Navigator.WrapMode = .wrap,
         outputStream: TerminalStream = .standardError,
         completionPresentation: TerminalInteractiveListCompletionPresentation = .leaveSummary,
         currentRowStyle: TerminalInteractiveCurrentRowStyle = .inverse

@@ -1,3 +1,5 @@
+import Surface
+
 public enum TerminalInteractiveListPresentation: String, Sendable, Codable, Hashable {
     case fullscreen
     case inline
@@ -18,7 +20,7 @@ public struct TerminalInteractiveListConfiguration: Sendable, Codable, Hashable 
     public var title: String
     public var instructions: String
     public var allowsMultipleSelection: Bool
-    public var wrapMode: TerminalListNavigator.WrapMode
+    public var wrapMode: SurfaceList.Navigator.WrapMode
     public var useAlternateScreen: Bool
     public var hideCursor: Bool
     public var outputStream: TerminalStream
@@ -30,7 +32,7 @@ public struct TerminalInteractiveListConfiguration: Sendable, Codable, Hashable 
         title: String,
         instructions: String = "",
         allowsMultipleSelection: Bool = true,
-        wrapMode: TerminalListNavigator.WrapMode = .wrap,
+        wrapMode: SurfaceList.Navigator.WrapMode = .wrap,
         useAlternateScreen: Bool = true,
         hideCursor: Bool = true,
         outputStream: TerminalStream = .standardError,
@@ -54,7 +56,7 @@ public struct TerminalInteractiveListConfiguration: Sendable, Codable, Hashable 
         title: String,
         instructions: String = "",
         allowsMultipleSelection: Bool = true,
-        wrapMode: TerminalListNavigator.WrapMode = .wrap,
+        wrapMode: SurfaceList.Navigator.WrapMode = .wrap,
         outputStream: TerminalStream = .standardError,
         completionPresentation: TerminalInteractiveListCompletionPresentation = .leaveSummary,
         currentRowStyle: TerminalInteractiveCurrentRowStyle = .inverse
@@ -247,12 +249,12 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
         guard !items.isEmpty else {
             renderer.render(
                 lines: renderedLines(
-                    navigator: TerminalListNavigator(
+                    navigator: SurfaceList.Navigator(
                         count: 0,
                         selectedIndex: 0,
                         wrapMode: configuration.wrapMode
                     ),
-                    selection: TerminalSelectionSet<ID>()
+                    selection: SurfaceList.Selection<ID>()
                 )
             )
 
@@ -276,14 +278,14 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
         }
 
         let reader = TerminalKeyReader()
-        var navigator = TerminalListNavigator(
+        var navigator = SurfaceList.Navigator(
             count: items.count,
             selectedIndex: initialCurrentIndex(
                 for: initialCurrentID
             ),
             wrapMode: configuration.wrapMode
         )
-        var selection = TerminalSelectionSet<ID>(
+        var selection = SurfaceList.Selection<ID>(
             selected: initialSelection.filter { id in
                 items.contains { item in
                     idProvider(item) == id && enabledProvider(item)
@@ -386,7 +388,7 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func moveSelection(
-        navigator: inout TerminalListNavigator,
+        navigator: inout SurfaceList.Navigator,
         direction: Int
     ) {
         guard !items.isEmpty else {
@@ -412,8 +414,8 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func toggleCurrent(
-        navigator: TerminalListNavigator,
-        selection: inout TerminalSelectionSet<ID>
+        navigator: SurfaceList.Navigator,
+        selection: inout SurfaceList.Selection<ID>
     ) {
         guard let index = navigator.selection else {
             return
@@ -442,8 +444,8 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func statefulAcceptedResult(
-        navigator: TerminalListNavigator,
-        selection: TerminalSelectionSet<ID>
+        navigator: SurfaceList.Navigator,
+        selection: SurfaceList.Selection<ID>
     ) -> TerminalInteractiveListStatefulResult<
         Item,
         ID
@@ -476,8 +478,8 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func statefulCancelledResult(
-        navigator: TerminalListNavigator,
-        selection: TerminalSelectionSet<ID>
+        navigator: SurfaceList.Navigator,
+        selection: SurfaceList.Selection<ID>
     ) -> TerminalInteractiveListStatefulResult<
         Item,
         ID
@@ -504,7 +506,7 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func currentItem(
-        navigator: TerminalListNavigator
+        navigator: SurfaceList.Navigator
     ) -> Item? {
         guard
             let index = navigator.selection,
@@ -522,8 +524,8 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func acceptedResult(
-        navigator: TerminalListNavigator,
-        selection: TerminalSelectionSet<ID>
+        navigator: SurfaceList.Navigator,
+        selection: SurfaceList.Selection<ID>
     ) -> TerminalInteractiveListResult<Item, ID> {
         let current: Item?
 
@@ -570,7 +572,7 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func selectedItems(
-        selection: TerminalSelectionSet<ID>
+        selection: SurfaceList.Selection<ID>
     ) -> [Item] {
         items.filter { item in
             selection.contains(
@@ -582,7 +584,7 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func selectedIDs(
-        selection: TerminalSelectionSet<ID>
+        selection: SurfaceList.Selection<ID>
     ) -> [ID] {
         items.compactMap { item in
             let id = idProvider(
@@ -599,8 +601,8 @@ public struct TerminalInteractiveList<Item: Sendable, ID: Hashable & Sendable>: 
     }
 
     private func renderedLines(
-        navigator: TerminalListNavigator,
-        selection: TerminalSelectionSet<ID>
+        navigator: SurfaceList.Navigator,
+        selection: SurfaceList.Selection<ID>
     ) -> [String] {
         let columns = Terminal.size(
             for: configuration.outputStream

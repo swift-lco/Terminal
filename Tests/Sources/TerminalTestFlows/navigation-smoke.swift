@@ -1,3 +1,4 @@
+import Surface
 import Terminal
 
 enum TerminalNavigationSmoke {
@@ -82,13 +83,13 @@ enum TerminalNavigationSmoke {
             on: .horizontal
         )
 
-        guard TerminalKey.control("P")
+        guard SurfaceInput.Key.control("P")
                 .isVerticalPrevious,
-              TerminalKey.control("P")
+              SurfaceInput.Key.control("P")
                 .isHorizontalPrevious,
-              TerminalKey.control("N")
+              SurfaceInput.Key.control("N")
                 .isVerticalNext,
-              TerminalKey.control("N")
+              SurfaceInput.Key.control("N")
                 .isHorizontalNext
         else {
             throw Failure
@@ -103,11 +104,11 @@ enum TerminalNavigationSmoke {
     }
 
     private static func expect(
-        _ key: TerminalKey,
-        _ expected: TerminalNavigationAction,
-        on axis: TerminalNavigationAxis
+        _ key: SurfaceInput.Key,
+        _ expected: SurfaceIntent.Navigation.Direction,
+        on axis: SurfaceIntent.Navigation.Axis
     ) throws {
-        guard key.navigationAction(
+        guard key.navigationDirection(
             on: axis
         ) == expected else {
             throw Failure

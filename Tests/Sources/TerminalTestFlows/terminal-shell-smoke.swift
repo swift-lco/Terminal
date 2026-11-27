@@ -1,4 +1,5 @@
 import Foundation
+import Surface
 import Terminal
 
 private enum TerminalShellFocus:
@@ -75,14 +76,14 @@ enum TerminalShellSmoke {
         var renderer = TerminalFrameRenderer(
             stream: stream
         )
-        var focus = TerminalFocusState(
+        var focus = SurfaceFocus.Ring(
             order: [
                 TerminalShellFocus.navigation,
                 .composer,
             ],
             focused: .composer
         )
-        var navigation = TerminalListControl(
+        var navigation = SurfaceList.Control(
             items: navigationItems,
             currentID: TerminalShellDestination.current,
             id: {
@@ -107,7 +108,7 @@ enum TerminalShellSmoke {
                     "Frame composition now owns positioned output without owning runtime semantics."
             ),
         ]
-        var viewport = TerminalViewport(
+        var viewport = SurfaceViewport(
             visibleRows: 0
         )
         var revealEnd = true
@@ -277,7 +278,7 @@ enum TerminalShellSmoke {
     private static func submit(
         composer: inout TerminalTextInputControl,
         messages: inout [TerminalShellMessage],
-        navigation: inout TerminalListControl<
+        navigation: inout SurfaceList.Control<
             TerminalShellNavigationItem,
             TerminalShellDestination
         >,
@@ -318,14 +319,14 @@ enum TerminalShellSmoke {
     private static func frame(
         size: TerminalSize,
         focus: TerminalShellFocus?,
-        navigation: TerminalListControl<
+        navigation: SurfaceList.Control<
             TerminalShellNavigationItem,
             TerminalShellDestination
         >,
         destination: TerminalShellDestination,
         composer: TerminalTextInputControl,
         messages: [TerminalShellMessage],
-        viewport: inout TerminalViewport,
+        viewport: inout SurfaceViewport,
         revealEnd: inout Bool
     ) -> TerminalFrame {
         var frame = TerminalFrame(
@@ -481,7 +482,7 @@ enum TerminalShellSmoke {
 
     private static func navigationLines(
         rows: [
-            TerminalListControlRow<
+            SurfaceList.Row<
                 TerminalShellNavigationItem,
                 TerminalShellDestination
             >
@@ -526,7 +527,7 @@ enum TerminalShellSmoke {
     }
 
     private static func navigationLine(
-        _ row: TerminalListControlRow<
+        _ row: SurfaceList.Row<
             TerminalShellNavigationItem,
             TerminalShellDestination
         >,

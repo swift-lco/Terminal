@@ -1,5 +1,6 @@
 import Foundation
 import Primitives
+import Surface
 import Terminal
 
 enum TerminalSettingsTreeSmoke {
@@ -45,7 +46,7 @@ enum TerminalSettingsTreeSmoke {
         guard control.handle(.enter) == .accepted("fast") else { throw Failure.events }
 
         // `/` reaches settings in folded sections; Space is a second switch.
-        for key in [TerminalKey.char("/")] + "mutate".map({ .char(String($0)) }) + [.enter] {
+        for key in [SurfaceInput.Key.char("/")] + "mutate".map({ .char(String($0)) }) + [.enter] {
             _ = control.handle(key)
         }
         guard control.currentID == "mutate",

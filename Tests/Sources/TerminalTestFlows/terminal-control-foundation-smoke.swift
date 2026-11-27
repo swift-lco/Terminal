@@ -1,3 +1,4 @@
+import Surface
 import Terminal
 
 enum TerminalControlFoundationSmoke {
@@ -22,7 +23,7 @@ enum TerminalControlFoundationSmoke {
     }
 
     private static func runFocusProbe() throws {
-        var focus = TerminalFocusState(
+        var focus = SurfaceFocus.Ring(
             order: [
                 "navigation",
                 "composer",
@@ -44,7 +45,7 @@ enum TerminalControlFoundationSmoke {
     }
 
     private static func runListProbe() throws {
-        var list = TerminalListControl(
+        var list = SurfaceList.Control(
             items: [
                 1,
                 2,
@@ -200,7 +201,7 @@ enum TerminalControlFoundationSmoke {
 
     private static func runComposerProbe() throws {
         var control = TerminalTextInputControl(
-            input: TerminalTextInput(
+            input: SurfaceTextInput.State(
                 text: "a"
             ),
             prompt: "> ",

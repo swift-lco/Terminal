@@ -1,28 +1,9 @@
-/// SGR mouse input. Positions use zero-based terminal display cells.
-public struct TerminalMouseEvent: Sendable, Codable, Hashable {
-    public enum Kind: String, Sendable, Codable, Hashable {
-        case press, drag, release, scrollUp, scrollDown
-    }
+import Surface
 
-    public var kind: Kind
-    public var position: TerminalTextPosition
-    public var modifiers: TerminalKeyModifiers
-    public var button: Int
-
-    public init(
-        kind: Kind,
-        row: Int,
-        column: Int,
-        modifiers: TerminalKeyModifiers = [],
-        button: Int = 0
-    ) {
-        self.kind = kind
-        self.position = TerminalTextPosition(row: row, column: column)
-        self.modifiers = modifiers
-        self.button = button
-    }
-
-    static func decode(_ bytes: [UInt8]) -> Self? {
+extension SurfaceInput.Pointer {
+    /// Decodes an SGR mouse report (the bytes after `ESC [`). Positions become
+    /// zero-based terminal display cells.
+    static func decodeSGR(_ bytes: [UInt8]) -> Self? {
         guard bytes.first == 0x3C,
               let final = bytes.last, final == 0x4D || final == 0x6D else {
             return nil
@@ -44,7 +25,7 @@ public struct TerminalMouseEvent: Sendable, Codable, Hashable {
         } else {
             kind = code & 32 != 0 ? .drag : .press
         }
-        var modifiers: TerminalKeyModifiers = []
+        var modifiers: SurfaceInput.Modifiers = []
         if code & 4 != 0 { modifiers.insert(.shift) }
         if code & 8 != 0 { modifiers.insert(.option) }
         if code & 16 != 0 { modifiers.insert(.control) }

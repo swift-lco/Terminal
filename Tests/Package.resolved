@@ -1,5 +1,5 @@
 {
-  "originHash" : "b1385b8ed70c8665b9ca539f016865c8e95aa0069c446a6a85bc8158fd6946cb",
+  "originHash" : "ea58c386a0be4bd64a62e00178178b3fd48cdb76370a23b8ad078da99b5a2719",
   "pins" : [
     {
       "identity" : "ansi",
@@ -188,6 +188,15 @@
       "state" : {
         "branch" : "master",
         "revision" : "cc7396a5c06e61a67eb48846a72dbe39dfff3305"
+      }
+    },
+    {
+      "identity" : "surface",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-lco/Surface.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "4837cac2f5d6b1255d13130bb1a88083f9d82921"
       }
     },
     {

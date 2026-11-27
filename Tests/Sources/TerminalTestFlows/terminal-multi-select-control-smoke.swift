@@ -1,3 +1,4 @@
+import Surface
 import Terminal
 
 enum TerminalMultiSelectControlSmoke {
@@ -7,7 +8,7 @@ enum TerminalMultiSelectControlSmoke {
     }
 
     static func run() throws {
-        var control = TerminalMultiSelectControl(
+        var control = SurfaceList.MultiSelect(
             items: [
                 Item(id: "one", enabled: true),
                 Item(id: "two", enabled: true),

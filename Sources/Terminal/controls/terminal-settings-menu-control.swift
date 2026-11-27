@@ -1,3 +1,5 @@
+import Surface
+
 public enum TerminalSettingsRowAccessory:
     Sendable,
     Hashable
@@ -86,7 +88,7 @@ public struct TerminalSettingsMenuControl<
     public var instructions: String
     public var rowLegend: String?
 
-    private var list: TerminalListControl<
+    private var list: SurfaceList.Control<
         TerminalSettingsRow<ID>,
         ID
     >
@@ -107,7 +109,7 @@ public struct TerminalSettingsMenuControl<
         self.rows = rows
         self.instructions = instructions
         self.rowLegend = rowLegend
-        self.list = TerminalListControl(
+        self.list = SurfaceList.Control(
             items: rows,
             currentID: currentID,
             id: { row in
@@ -171,7 +173,7 @@ public struct TerminalSettingsMenuControl<
     }
 
     public mutating func handle(
-        _ key: TerminalKey
+        _ key: SurfaceInput.Key
     ) -> TerminalSettingsMenuEvent<ID>? {
         switch key {
         case .char("J"):
@@ -413,7 +415,7 @@ private extension TerminalSettingsMenuControl {
     }
 
     func renderRow(
-        _ row: TerminalListControlRow<
+        _ row: SurfaceList.Row<
             TerminalSettingsRow<ID>,
             ID
         >,

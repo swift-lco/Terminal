@@ -1,3 +1,4 @@
+import Surface
 import Terminal
 
 enum TerminalKeyMapFoundationSmoke {
@@ -9,18 +10,18 @@ enum TerminalKeyMapFoundationSmoke {
     }
 
     static func run() throws {
-        var keyMap = TerminalKeyMap<Action>()
+        var keyMap = SurfaceBinding.Strokes<Action>()
 
         keyMap.remap(
             .control("C"),
             to: .escape
         )
-        keyMap.bindAction(
+        keyMap.bind(
             .escape,
             to: .requestQuit
         )
-        keyMap.bindAction(
-            TerminalKeyStroke(
+        keyMap.bind(
+            SurfaceInput.Stroke(
                 key: .enter,
                 modifiers: .control
             ),
@@ -38,7 +39,7 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap key remap",
+                probe: "SurfaceBinding.Strokes key remap",
                 expectation: "control-C resolves once to escape",
                 observed: "unexpected resolution"
             )
@@ -52,14 +53,14 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap action binding",
+                probe: "SurfaceBinding.Strokes action binding",
                 expectation: "raw escape resolves to requestQuit",
                 observed: "unexpected resolution"
             )
         }
 
         switch keyMap.resolveOrFallback(
-            TerminalKeyStroke(
+            SurfaceInput.Stroke(
                 key: .enter,
                 modifiers: .control
             )
@@ -69,14 +70,14 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap modified key action",
+                probe: "SurfaceBinding.Strokes modified key action",
                 expectation: "control-enter resolves to submit",
                 observed: "unexpected resolution"
             )
         }
 
         switch keyMap.resolveOrFallback(
-            TerminalKeyStroke(
+            SurfaceInput.Stroke(
                 key: .enter
             )
         ) {
@@ -85,7 +86,7 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap unmodified enter fallback",
+                probe: "SurfaceBinding.Strokes unmodified enter fallback",
                 expectation: "plain enter remains native",
                 observed: "unexpected resolution"
             )
@@ -99,7 +100,7 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap native fallback",
+                probe: "SurfaceBinding.Strokes native fallback",
                 expectation: "unmapped key falls through unchanged",
                 observed: "unexpected resolution"
             )
@@ -113,17 +114,17 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap consumed binding",
+                probe: "SurfaceBinding.Strokes consumed binding",
                 expectation: "control-G consumed",
                 observed: "unexpected resolution"
             )
         }
 
-        guard keyMap.binding(
-            for: .control("C")
+        guard keyMap.resolve(
+            .control("C")
         ) != nil else {
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap binding lookup",
+                probe: "SurfaceBinding.Strokes resolve lookup",
                 expectation: "control-C binding exists",
                 observed: "nil"
             )
@@ -141,7 +142,7 @@ enum TerminalKeyMapFoundationSmoke {
 
         default:
             throw TerminalTestFailure(
-                probe: "TerminalKeyMap removed binding fallback",
+                probe: "SurfaceBinding.Strokes removed binding fallback",
                 expectation: "removed binding restores native key",
                 observed: "unexpected resolution"
             )
