@@ -7,6 +7,10 @@ public struct TerminalStyle: Sendable, Hashable {
             green: UInt8,
             blue: UInt8
         )
+        /// A colour of the xterm 256-colour palette.
+        case indexed(UInt8)
+        /// One of the 16 standard colours: 0–7 normal, 8–15 bright.
+        case basic(UInt8)
 
         public static func hex(
             _ value: String
@@ -39,8 +43,14 @@ public struct TerminalStyle: Sendable, Hashable {
             )
         }
 
-        public func hex() -> String {
+        /// `#rrggbb` for an RGB colour; palette colours depend on the
+        /// terminal's palette and have none.
+        public func hex() -> String? {
             switch self {
+            case .indexed,
+                 .basic:
+                return nil
+
             case .rgb(
                 let red,
                 let green,
@@ -74,6 +84,16 @@ public struct TerminalStyle: Sendable, Hashable {
                     Int(blue),
                     background
                 )
+
+            case .indexed(let index):
+                return "\u{001B}[\(background ? 48 : 38);5;\(index)m"
+
+            case .basic(let index):
+                let index = Int(min(15, index))
+                let base = index < 8
+                    ? (background ? 40 : 30)
+                    : (background ? 100 : 90)
+                return "\u{001B}[\(base + index % 8)m"
             }
         }
 

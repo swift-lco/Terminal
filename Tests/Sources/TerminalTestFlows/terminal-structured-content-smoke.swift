@@ -16,6 +16,9 @@ enum TerminalStructuredContentSmoke {
         case linkFallback
         case readerBlocks
         case capabilities
+        case themeParity
+        case themeColors
+        case themeRoles
     }
 
     static func run() throws {
@@ -29,6 +32,7 @@ enum TerminalStructuredContentSmoke {
         try hyperlinks()
         try readerBlocks()
         try capabilities()
+        try theme()
         print(sample())
     }
 
@@ -295,6 +299,57 @@ enum TerminalStructuredContentSmoke {
 
         guard rows.allSatisfy({ TerminalDisplay.width(of: $0) <= 32 }) else {
             throw Failure.width
+        }
+    }
+
+    private static func theme() throws {
+        let content = StructuredContent.collection([
+            sampleContent(),
+            .heading(level: 1, anchor: nil, content: [.text("Heading")]),
+            .quote(.paragraph([.text("Quoted")]), attribution: [.text("Someone")]),
+            .figure(anchor: nil, content: .paragraph([.text("Body")]), caption: [.text("Caption")]),
+            .rule,
+            .paragraph([.link(target: .external("https://example.com"), content: [.text("site")])]),
+        ])
+        let minimal = TerminalStructuredContent.Renderer().render(content, columns: 48)
+        let themed = TerminalStructuredContent.Renderer(
+            format: .init(theme: .standard, scheme: .light, colorDepth: .basic)
+        ).render(content, columns: 48)
+
+        guard minimal == themed else {
+            throw Failure.themeParity
+        }
+
+        let red = ThemeColor(css: "#ff0000")!
+        let grey = ThemeColor(css: "rgb(128 128 128)")!
+
+        guard red.basic == 9,
+              red.indexed == 196,
+              grey.indexed == 244,
+              TerminalStyle.Color(red, depth: .none) == nil,
+              TerminalStyle.Color(red, depth: .indexed) == .indexed(196),
+              TerminalStyle(.init(foreground: red), colorDepth: .basic).apply("x") == "\u{001B}[91mx\u{001B}[0m",
+              TerminalStyle(.init(foreground: red), colorDepth: .indexed).apply("x") == "\u{001B}[38;5;196mx\u{001B}[0m"
+        else {
+            throw Failure.themeColors
+        }
+
+        var theme = Theme.standard
+        theme.light[.note] = .init(foreground: ThemeColor(css: "#0a63c9"), indent: 2)
+        theme.dark[.note] = .init(foreground: ThemeColor(css: "#7ab8ff"))
+        let light = TerminalStructuredContent.Format(theme: theme, scheme: .light, colorDepth: .trueColor)
+        let dark = TerminalStructuredContent.Format(theme: theme, scheme: .dark, colorDepth: .trueColor)
+        let note = StructuredContent.group(role: .note, title: [.text("Note")], content: .paragraph([.text("Body")]))
+        let lightRows = TerminalStructuredContent.Renderer(format: light).rows(note, columns: 20)
+        let darkRows = TerminalStructuredContent.Renderer(format: dark).rows(note, columns: 20)
+
+        guard lightRows.map(stripANSI) == ["Note", "", "  Body"],
+              lightRows[0].contains("38;2;10;99;201"),
+              darkRows[0].contains("38;2;122;184;255"),
+              lightRows[0].contains("\u{001B}[1m")
+        else {
+            print(lightRows, darkRows)
+            throw Failure.themeRoles
         }
     }
 

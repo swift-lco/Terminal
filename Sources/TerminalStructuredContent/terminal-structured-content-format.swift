@@ -54,6 +54,7 @@ public extension TerminalStructuredContent.Format {
         public var table: Table
         public var figure: Figure
         public var rule: Rule
+        public var heading: Heading
 
         public init(
             collection: Collection = .init(),
@@ -64,10 +65,12 @@ public extension TerminalStructuredContent.Format {
             group: Group = .init(),
             table: Table = .init(),
             figure: Figure = .init(),
-            rule: Rule = .init()
+            rule: Rule = .init(),
+            heading: Heading = .init()
         ) {
             self.figure = figure
             self.rule = rule
+            self.heading = heading
             self.collection = collection
             self.paragraph = paragraph
             self.code = code
@@ -181,6 +184,11 @@ public extension TerminalStructuredContent.Format.Block {
             self.captionStyle = captionStyle
             self.spacing = max(0, spacing)
         }
+    }
+
+    struct Heading: Sendable, Hashable {
+        public var style: TerminalStyle
+        public init(style: TerminalStyle = .bold) { self.style = style }
     }
 
     /// A section break, centred.

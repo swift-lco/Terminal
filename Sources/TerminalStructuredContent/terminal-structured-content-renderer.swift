@@ -144,9 +144,9 @@ private extension TerminalStructuredContent.Renderer {
 
         case .heading(_, _, let content):
             return inlineRows(
-                [.strong(content)],
+                content,
                 columns: columns,
-                baseStyle: format.block.paragraph.style
+                baseStyle: format.block.heading.style
             )
 
         case .image(let source, let alt):
