@@ -1,4 +1,11 @@
 import DSL
+import Foundation
+
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 
 public extension RenderCapabilities {
     /// A terminal assumed to have basic colour and no OSC 8 links: safe for
@@ -11,6 +18,15 @@ public extension RenderCapabilities {
             tables: true,
             colorDepth: .basic,
             interactivity: false
+        )
+    }
+
+    /// What this process's terminal supports, from its environment and
+    /// whether standard output is a terminal.
+    static var currentTerminal: Self {
+        terminal(
+            environment: ProcessInfo.processInfo.environment,
+            isTerminal: isatty(STDOUT_FILENO) != 0
         )
     }
 
