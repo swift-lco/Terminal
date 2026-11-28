@@ -100,6 +100,13 @@ enum TerminalSettingsMenuSmoke {
             throw Failure.unavailable
         }
 
+        // The detail pane shows the current row: back to Discovery for its fields.
+        guard control.select(
+            id: .discovery
+        ) else {
+            throw Failure.selection
+        }
+
         var frame = TerminalFrame(
             rows: 28,
             columns: 100

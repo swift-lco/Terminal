@@ -258,7 +258,7 @@ enum TerminalTUIFoundationSmoke {
         ),
         lines.count >= 2,
         lines[lines.count - 2] == " ...",
-        lines[lines.count - 1] == "EOF │" else {
+        lines[lines.count - 1] == "EOF" else {
             throw Failure.unexpectedDifferenceEndOfFile
         }
     }
